@@ -16,7 +16,7 @@ require "rack/test"
 
 require "celluloid"
 require "sidekiq"
-require "sidekiq-failures"
+require "sidekiq-manager"
 require "sidekiq/processor"
 require "sidekiq/fetch"
 require "sidekiq/cli"
@@ -24,4 +24,4 @@ require "sidekiq/cli"
 Celluloid.logger = nil
 Sidekiq.logger.level = Logger::ERROR
 
-REDIS = Sidekiq::RedisConnection.create(:url => "redis://localhost/15", :namespace => 'sidekiq_failures_test')
+REDIS = Sidekiq::RedisConnection.create(:url => "redis://localhost/15", :namespace => 'sidekiq_manager_test')

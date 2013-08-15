@@ -1,5 +1,5 @@
 module Sidekiq
-  module Failures
+  module JobManager
 
     class Middleware
       include Sidekiq::Util

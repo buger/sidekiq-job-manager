@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sidekiq-failures (0.2.1)
+    sidekiq-job-manager (0.0.1)
       sidekiq (>= 2.9.0)
 
 GEM
@@ -50,7 +50,7 @@ PLATFORMS
 DEPENDENCIES
   rack-test
   rake
-  sidekiq-failures!
+  sidekiq-job-manager!
   sinatra
   slim
   sprockets

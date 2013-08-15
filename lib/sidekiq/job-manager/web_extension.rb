@@ -1,5 +1,5 @@
 module Sidekiq
-  module Failures
+  module JobManager
     module WebExtension
 
       def self.registered(app)
