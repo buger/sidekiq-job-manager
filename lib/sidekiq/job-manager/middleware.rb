@@ -6,19 +6,25 @@ module Sidekiq
       attr_accessor :msg
 
       def call(worker, msg, queue)
+        error = nil
+
         self.msg = msg
         yield
       rescue Sidekiq::Shutdown
+        error = { :error => 'Sidekiq::Shutdown' }
         raise
       rescue => e
         raise e if skip_failure?
 
+        error = {
+          :exception => e.class.to_s,
+          :error => e.message,
+          :backtrace => e.backtrace
+        }
+
         data = {
           :failed_at => Time.now.strftime("%Y/%m/%d %H:%M:%S %Z"),
           :payload => msg,
-          :exception => e.class.to_s,
-          :error => e.message,
-          :backtrace => e.backtrace,
           :worker => msg['class'],
           :processor => "#{hostname}:#{process_id}-#{Thread.current.object_id}",
           :queue => queue
@@ -32,6 +38,18 @@ module Sidekiq
         end
 
         raise e
+      ensure
+        data = {
+          :finished_at => Time.now.strftime("%Y/%m/%d %H:%M:%S %Z"),
+          :payload => msg,
+          :queue => queue,
+          :error => error
+        }
+
+        Sidekiq.redis do |conn|
+          conn.zadd(:unique_jobs, 0, msg['class'])
+          conn.lpush("#{msg['class']}:details", Sidekiq.dump_json(data))
+        end
       end
 
       private
