@@ -38,18 +38,18 @@ module Sidekiq
   #
   # Defaults to 1000
   # Set to false to disable rotation
-  def self.failures_max_count=(value)
-    @failures_max_count = value
+  def self.job_details_max_count=(value)
+    @job_details_max_count = value
   end
 
   # Fetches the failures max count value
-  def self.failures_max_count
-    return 1000 if @failures_max_count.nil?
+  def self.job_details_max_count
+    return 1000 if @job_details_max_count.nil?
 
-    @failures_max_count
+    @job_details_max_count
   end
 
-  module Failures
+  module JobManager
   end
 end
 

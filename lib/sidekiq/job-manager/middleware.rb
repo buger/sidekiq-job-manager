@@ -32,8 +32,8 @@ module Sidekiq
 
         Sidekiq.redis do |conn|
           conn.lpush(:failed, Sidekiq.dump_json(data))
-          unless Sidekiq.failures_max_count == false
-            conn.ltrim(:failed, 0, Sidekiq.failures_max_count - 1)
+          unless Sidekiq.job_details_max_count == false
+            conn.ltrim(:failed, 0, Sidekiq.job_details_max_count - 1)
           end
         end
 
@@ -49,6 +49,7 @@ module Sidekiq
         Sidekiq.redis do |conn|
           conn.zadd(:unique_jobs, 0, msg['class'])
           conn.lpush("#{msg['class']}:details", Sidekiq.dump_json(data))
+          conn.ltrim("#{msg['class']}:details", 0, Sidekiq.job_details_max_count - 1)
         end
       end
 

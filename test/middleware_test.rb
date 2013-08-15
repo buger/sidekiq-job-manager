@@ -6,6 +6,7 @@ module Sidekiq
     describe "Middleware" do
       before do
         $invokes = 0
+        Sidekiq.job_details_max_count = nil
         @boss = MiniTest::Mock.new
         @processor = ::Sidekiq::Processor.new(@boss)
         Sidekiq.server_middleware {|chain| chain.add Sidekiq::JobManager::Middleware }
@@ -232,37 +233,6 @@ module Sidekiq
         assert_equal 1, $invokes
       end
 
-      it "removes old failures when failures_max_count has been reached" do
-        assert_equal 1000, Sidekiq.failures_max_count
-        Sidekiq.failures_max_count = 2
-
-        msg = create_work('class' => MockWorker.to_s, 'args' => ['myarg'])
-
-        assert_equal 0, failures_count
-
-        3.times do
-          boss = MiniTest::Mock.new
-          processor = ::Sidekiq::Processor.new(boss)
-          
-          actor = MiniTest::Mock.new
-          actor.expect(:processor_done, nil, [processor])
-          actor.expect(:real_thread, nil, [nil, Celluloid::Thread])
-          2.times { boss.expect(:async, actor, []) }
-
-          assert_raises TestException do
-            processor.process(msg)
-          end
-        end
-
-        assert_equal 2, failures_count
-
-        Sidekiq.failures_max_count = false
-        assert Sidekiq.failures_max_count == false
-
-        Sidekiq.failures_max_count = nil
-        assert_equal 1000, Sidekiq.failures_max_count
-      end
-
       # TESTS FOR MANAGER
 
       it 'should update active jobs' do
@@ -311,6 +281,19 @@ module Sidekiq
 
         assert_equal 3, details.select{|j| j['error']}.length
         assert_equal 2, details.select{|j| !j['error']}.length
+      end
+
+      it "removes old details when job_details_max_count has been reached" do
+        assert_equal 1000, Sidekiq.job_details_max_count
+        Sidekiq.job_details_max_count = 2
+
+        5.times do
+          processor = mock_actor
+          msg = create_work('class' => MockWorker.to_s, 'args' => ['myarg', 'success'])
+          processor.process(msg)
+        end
+
+        assert_equal 2, job_details(MockWorker.to_s).length
       end
 
       def failures_count
