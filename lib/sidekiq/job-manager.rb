@@ -10,27 +10,6 @@ require "sidekiq/job-manager/web_extension"
 
 module Sidekiq
 
-  SIDEKIQ_FAILURES_MODES = [:all, :exhausted, :off].freeze
-
-  # Sets the default failure tracking mode.
-  #
-  # The value provided here will be the default behavior but can be overwritten
-  # per worker by using `sidekiq_options :failures => :mode`
-  #
-  # Defaults to :all
-  def self.failures_default_mode=(mode)
-    unless SIDEKIQ_FAILURES_MODES.include?(mode.to_sym)
-      raise ArgumentError, "Sidekiq#failures_default_mode valid options: #{SIDEKIQ_FAILURES_MODES}"
-    end
-
-    @failures_default_mode = mode.to_sym
-  end
-
-  # Fetches the default failure tracking mode.
-  def self.failures_default_mode
-    @failures_default_mode || :all
-  end
-
   # Sets the maximum number of failures to track
   #
   # If the number of failures exceeds this number the list will be trimmed (oldest
