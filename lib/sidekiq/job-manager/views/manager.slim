@@ -5,8 +5,9 @@ header.row
 - if @jobs.length > 0
   table class="table table-striped table-bordered table-white" style="width: 100%; margin: 0; table-layout:fixed;"
     thead
-      th style="width: 50%" Worker
-      th style="width: 50%" Last run
+      th style="width: 44%" Worker
+      th style="width: 44%" Last run
+      th style="widht: 12%" Action
     - @jobs.each do |job|
       tr class="#{job[:last_call]['error'].nil? ? '' : 'error'}"
         td style="overflow: hidden; text-overflow: ellipsis;"
@@ -15,5 +16,21 @@ header.row
         td
           time datetime="#{Time.parse(job[:last_call]['finished_at']).getutc.iso8601}"
             = job[:last_call]['finished_at']
+
+        td
+          input.btn.btn-small.add-to-queue type="button" name="run" value="Add to queue" data-worker="#{job[:name]}" data-queue="#{job[:last_call]['queue']}"
 - else
   .alert.alert-success  No failed jobs found.
+
+javascript:
+  $('input.add-to-queue').live('click', function(){
+    var params = {
+      args: prompt('Enter arguments, comma separated', $(this).data('args')),
+      worker: $(this).data('worker'),
+      queue: $(this).data('queue')
+    }
+
+    $.post('#{root_path}manager/add_to_queue', params, function(data) {
+      window.location = "#{root_path}queues/"+params['queue']
+    });
+  })

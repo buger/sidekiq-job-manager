@@ -21,24 +21,36 @@ module Sidekiq
         end
 
         app.get "/manager/worker/:name" do |name|
+          @worker = name
           view_path = File.join(File.expand_path("..", __FILE__), "views")
 
-          @count = (params[:count] || 25).to_i
+          @count = (params[:count] || 50).to_i
           (@current_page, @total_size, @messages) = page("#{name}:details", params[:page], @count)
           @messages = @messages.map { |msg| Sidekiq.load_json(msg) }
 
           render(:slim, File.read(File.join(view_path, "job_details.slim")))
         end
 
-        app.post "/manager/remove" do
+        app.post "/manager/worker/:name/remove" do |name|
           Sidekiq.redis {|c|
             c.multi do
-              c.del("failed")
-              c.set("stat:failed", 0) if params["counter"]
+              c.del("#{name}:details")
+              c.zrem("unique_jobs", name)
             end
           }
 
           redirect "#{root_path}manager"
+        end
+
+        app.post "/manager/add_to_queue" do
+          msg = {
+            'class' => params[:worker],
+            'args' => params[:args].split(','),
+            'queue' => params[:queue] || "default",
+            'retry' => false
+          }
+
+          Sidekiq::Client.push(msg)      
         end
       end
     end
