@@ -14,25 +14,25 @@ module Sidekiq
       Sidekiq.redis {|c| c.flushdb }
     end
 
-    it 'can display home with failures tab' do
+    it 'can display home with manager tab' do
       get '/'
 
       last_response.status.must_equal 200
       last_response.body.must_match /Sidekiq/
-      last_response.body.must_match /Failures/
+      last_response.body.must_match /Job Manager/
     end
 
-    it 'can display failures page without any failures' do
-      get '/failures'
+    it 'can display jobs page without any failures' do
+      get '/manager'
       last_response.status.must_equal 200
-      last_response.body.must_match /Failed Jobs/
-      last_response.body.must_match /No failed jobs found/
+      last_response.body.must_match /Recent jobs/
+      last_response.body.must_match /No jobs found/
     end
 
-    describe 'when there are failures' do
+    describe 'when there are jobs' do
       before do
         create_sample_failure
-        get '/failures'
+        get '/manager'
       end
 
       it 'should be successful' do
@@ -40,73 +40,33 @@ module Sidekiq
       end
 
       it 'can display failures page with failures listed' do
-        last_response.body.must_match /Failed Jobs/
-        last_response.body.must_match /HardWorker/
-        last_response.body.must_match /ArgumentError/
-        last_response.body.wont_match /No failed jobs found/
-      end
-
-      it 'has the clear all form and action' do
-        last_response.body.must_match /failures\/remove/
-        last_response.body.must_match /method=\"post/
-        last_response.body.must_match /Clear All/
-        last_response.body.must_match /reset failed counter/
-      end
-
-      it 'can remove all failures without clearing counter' do
-        assert_equal failed_count, "1"
-
-        last_response.body.must_match /HardWorker/
-
-        post '/failures/remove'
-        last_response.status.must_equal 302
-        last_response.location.must_match /failures$/
-
-        get '/failures'
-        last_response.status.must_equal 200
-        last_response.body.must_match /No failed jobs found/
-
-        assert_equal failed_count, "1"
-      end
-
-      it 'can remove all failures and clear counter' do
-        assert_equal failed_count, "1"
-
-        last_response.body.must_match /HardWorker/
-
-        post '/failures/remove', counter: "true"
-        last_response.status.must_equal 302
-        last_response.location.must_match /failures$/
-
-        get '/failures'
-        last_response.status.must_equal 200
-        last_response.body.must_match /No failed jobs found/
-
-        assert_equal failed_count, "0"
+        
       end
     end
 
     def create_sample_failure
       data = {
-        :failed_at => Time.now.strftime("%Y/%m/%d %H:%M:%S %Z"),
-        :payload => { :args => ["bob", 5] },
-        :exception => "ArgumentError",
-        :error => "Some new message",
-        :backtrace => ["path/file1.rb", "path/file2.rb"],
-        :worker => 'HardWorker',
+        :finished_at => Time.now.strftime("%Y/%m/%d %H:%M:%S %Z"),
+        :payload => { :args => ["test", 5], :class => 'Worker' },
+        :error => {
+          :exception => "ArgumentError",
+          :error => "Some new message",
+          :backtrace => ["path/file1.rb", "path/file2.rb"]
+        },
         :queue => 'default'
       }
 
       Sidekiq.redis do |c|
         c.multi do
-          c.rpush("failed", Sidekiq.dump_json(data))
-          c.set("stat:failed", 1)
+          c.zadd(:unique_jobs, 0, data[:payload][:class])
+          c.lpush("#{data[:payload][:class]}:details", Sidekiq.dump_json(data))
         end
       end
     end
 
-    def failed_count
-      Sidekiq.redis { |c| c.get("stat:failed") }
+    def unique_jobs_count
+      Sidekiq.redis { |conn|conn.zcard('unique_jobs') } || 0
     end
+
   end
 end

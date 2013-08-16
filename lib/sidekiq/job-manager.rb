@@ -64,8 +64,8 @@ if defined?(Sidekiq::Web)
 
   if Sidekiq::Web.tabs.is_a?(Array)
     # For sidekiq < 2.5
-    Sidekiq::Web.tabs << "failures"
+    Sidekiq::Web.tabs << "manager"
   else
-    Sidekiq::Web.tabs["Failures"] = "failures"
+    Sidekiq::Web.tabs["Job Manager"] = "manager"
   end
 end

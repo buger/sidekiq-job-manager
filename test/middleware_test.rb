@@ -99,10 +99,6 @@ module Sidekiq
         assert_equal 2, job_details(MockWorker.to_s).length
       end
 
-      def failures_count
-        Sidekiq.redis { |conn|conn.llen('failed') } || 0
-      end
-
       def create_work(msg)
         Sidekiq::BasicFetch::UnitOfWork.new('default', Sidekiq.dump_json(msg))
       end
