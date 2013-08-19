@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sidekiq-job-manager (0.1.0)
+    sidekiq-job-manager (0.1.3)
       sidekiq (>= 2.9.0)
 
 GEM

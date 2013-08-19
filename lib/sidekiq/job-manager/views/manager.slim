@@ -20,7 +20,7 @@ header.row
         td
           input.btn.btn-small.add-to-queue type="button" name="run" value="Add to queue" data-worker="#{job[:name]}" data-queue="#{job[:last_call]['queue']}"
 - else
-  .alert.alert-success  No failed jobs found.
+  .alert.alert-success  No recent jobs found.
 
 javascript:
   $('input.add-to-queue').live('click', function(){

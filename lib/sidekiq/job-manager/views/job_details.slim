@@ -12,7 +12,7 @@ header.row
     thead
       th style="width: 25%" Payload
       th style="width: 10%" Queue
-      th style="width: 15%" Failed At
+      th style="width: 15%" Finished At
       th style="width: 38%" Exception
       th style="width: 12%" Action
     - @messages.each do |msg|
@@ -37,7 +37,7 @@ header.row
     .span4
       == slim :_paging, :locals => { :url => "#{root_path}manager/worker/#{@worker}#@name" }
 - else
-  .alert.alert-success  No failed jobs found.
+  .alert.alert-success  No recent jobs found.
 
 javascript:
   $('input.filter').live('keyup', function() {
