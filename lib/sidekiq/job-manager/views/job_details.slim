@@ -55,7 +55,9 @@ javascript:
       queue: $(this).data('queue')
     }
 
-    $.post('#{root_path}manager/add_to_queue', params, function(data) {
-      window.location = "#{root_path}queues/"+params['queue']
-    });
+    if (params['args'] != undefined) {
+      $.post('#{root_path}manager/add_to_queue', params, function(data) {
+        window.location = "#{root_path}queues/"+params['queue']
+      });
+    }
   })
