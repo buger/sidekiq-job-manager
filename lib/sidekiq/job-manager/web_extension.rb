@@ -1,3 +1,5 @@
+require 'slim'
+
 module Sidekiq
   module JobManager
     module WebExtension
@@ -17,7 +19,7 @@ module Sidekiq
             }
           end
 
-          render(:slim, File.read(File.join(view_path, "manager.slim")))
+          render(:erb, File.read(File.join(view_path, "manager.erb")))
         end
 
         app.get "/manager/worker/:name" do |name|
@@ -28,7 +30,7 @@ module Sidekiq
           (@current_page, @total_size, @messages) = page("#{name}:details", params[:page], @count)
           @messages = @messages.map { |msg| Sidekiq.load_json(msg) }
 
-          render(:slim, File.read(File.join(view_path, "job_details.slim")))
+          render(:erb, File.read(File.join(view_path, "job_details.erb")))
         end
 
         app.post "/manager/worker/:name/remove" do |name|

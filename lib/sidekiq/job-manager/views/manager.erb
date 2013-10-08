@@ -1,0 +1,47 @@
+<header class="row">
+  <div class="span5">
+    <h3>Recent Jobs</h3>
+  </div>
+</header>
+
+<% if @jobs.length > 0 %>
+  <table class="table table-striped table-bordered table-white" style="width: 100%; margin: 0; table-layout:fixed;">
+    <thead>
+      <th style="width: 44%">Worker</th>
+      <th style="width: 44%">Last run</th>
+      <th style="widht: 12%">Action</th>
+    </thead>
+    <% @jobs.each do |job| %>
+      <tr class="<%=job[:last_call]['error'].nil? ? '' : 'error'%>">
+        <td style="overflow: hidden; text-overflow: ellipsis;">
+          <a href="<%=root_path%>manager/worker/<%=job[:name]%>">
+            <%= job[:name] %>
+          </a>
+        <td>
+          <time datetime="<%=Time.parse(job[:last_call]['finished_at']).getutc.iso8601%>">
+            <%= job[:last_call]['finished_at'] %>
+          </time>
+        </td>
+        <td>
+          <input class="btn btn-small add-to-queue" type="button" name="run" value="Add to queue" data-worker="<%=job[:name]%>" data-queue="<%=job[:last_call]['queue']%>" />
+        </td>
+      </tr>
+    <% end %>
+  </table>
+<% else %>
+  <div class="alert alert-success">No recent jobs found</div>
+<% end %>
+
+<script type="text/javascript">
+  $('input.add-to-queue').live('click', function(){
+    var params = {
+      args: prompt('Enter arguments, comma separated', $(this).data('args')),
+      worker: $(this).data('worker'),
+      queue: $(this).data('queue')
+    }
+
+    $.post('<%=root_path%>manager/add_to_queue', params, function(data) {
+      window.location = "<%=root_path%>queues/"+params['queue']
+    });
+  })
+</script>

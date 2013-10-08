@@ -1,0 +1,85 @@
+<header class="col-sm-12">
+  <div class="col-sm-5">
+    <h3>Last calls of <%=@worker%> worker</h3>
+  </div>
+  <div class="col-sm-3"">
+    <input class="filter" type="search" style="margin: 12px 0;margin-top: 18px;" placeholder="Filter" />
+  </div>
+  <div class="col-sm-2"">
+    <% if @messages.size > 0 %>
+      <%= erb :_paging, :locals => { :url => "#{root_path}manager/worker/#{@worker}#@name" } %>
+    <% end %>
+  </div>
+</header>
+
+<% if @messages.size > 0 %>
+  <table class="table table-striped table-bordered table-white" style="width: 100%; margin: 0; table-layout:fixed;">
+    <thead>
+      <th style="width: 25%">Payload</th>
+      <th style="width: 10%">Queue</th>
+      <th style="width: 15%">Finished At</th>
+      <th style="width: 38%">Exception</th>
+      <th style="width: 12%">Action</th>
+    </thead>
+    <% @messages.each do |msg| %>
+      <tr class="<%=msg['error'].nil? ? '' : 'error'%>">
+        <td style="overflow: hidden; text-overflow: ellipsis;">
+          <%= msg['payload'] %>
+        </td>
+        <td><%= msg['queue'] %>
+        <td>
+          <time datetime="<%=Time.parse(msg['finished_at']).getutc.iso8601%>">
+            <%= msg['finished_at'] %>
+          </time>
+        </td>        
+        <td style="overflow: auto; padding: 10px;">
+          <% if msg['error'] %>
+            <a class="backtrace" href="#" onclick="$(this).next().toggle(); return false" = "<%=msg['error']['exception']%>: <%=msg['error']['error']%>"
+            <pre style="display: none; background: none; border: 0; width: 100%; max-height: 30em; font-size: 0.8em; white-space: nowrap;"><%= msg['error']['backtrace'].join("<br />") %>
+            </pre>
+          <% end %>
+        </td>
+        <td>
+          <input class="btn btn-small add-to-queue" type="button" name="run" value="Add to queue" data-args="<%=msg['payload']['args'].join(',')%>" data-worker="<%=@worker%>" data-queue="<%=msg['queue']%>" />
+        </td>
+      </tr>
+    <% end %>
+  </table>
+
+  <div class="row">
+    <div class="span5">
+      <div class="form form-inline" action="<%=root_path%>manager/worker/<%=@worker%>/remove" method="post" style="margin: 20px 0">
+        <input class="btn btn-danger btn-small" type="submit" name="delete" value="Clear All" />
+      </div>
+    </div>
+    <div class="span4" />
+      <%= erb :_paging, :locals => { :url => "#{root_path}manager/worker/#{@worker}#@name" } %>
+    </div>
+  </div>
+<% else %>
+  <div class="alert alert-success">No recent jobs found.</div>
+<% end %>
+
+<script type="text/javascript">
+  $('input.filter').live('keyup', function() {
+    var rex = new RegExp($(this).val(), 'i');
+    $('.table-striped tbody tr').hide();
+        $('.table-striped tbody tr').filter(function() {
+            return rex.test($(this).text());
+        }).show();
+    });
+
+  $('input.add-to-queue').live('click', function(){
+    var params = {
+      args: prompt('Enter arguments, comma separated', $(this).data('args')),
+      worker: $(this).data('worker'),
+      queue: $(this).data('queue')
+    }
+
+    if (params['args'] != undefined) {
+      $.post('<%=root_path%>manager/add_to_queue', params, function(data) {
+        window.location = "<%=root_path%>queues/"+params['queue']
+      });
+    }
+  })
+</script>

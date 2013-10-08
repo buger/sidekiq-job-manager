@@ -4,9 +4,10 @@
 #
 require 'sidekiq'
 require 'sidekiq/web'
-require './lib/sidekiq-manager'
+require './lib/sidekiq-job-manager'
+require 'mock_redis'
 
-REDIS = Sidekiq::RedisConnection.create(:url => "redis://localhost/15", :namespace => 'sidekiq_manager_test')
+REDIS = ConnectionPool.new(:size => 1, :timeout => 5) { MockRedis.new }
 Sidekiq.redis = REDIS
 Sidekiq.redis {|c| c.flushdb }
 
