@@ -22,4 +22,6 @@ Gem::Specification.new do |gem|
   gem.add_development_dependency "sprockets"
   gem.add_development_dependency "sinatra"
   gem.add_development_dependency "slim"
+  gem.add_development_dependency "connection_pool"
+  gem.add_development_dependency "mock_redis"
 end

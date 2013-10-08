@@ -16,12 +16,13 @@ require "rack/test"
 
 require "celluloid"
 require "sidekiq"
-require "sidekiq-manager"
+require "sidekiq-job-manager"
 require "sidekiq/processor"
 require "sidekiq/fetch"
 require "sidekiq/cli"
+require "mock_redis"
 
 Celluloid.logger = nil
 Sidekiq.logger.level = Logger::ERROR
 
-REDIS = Sidekiq::RedisConnection.create(:url => "redis://localhost/15", :namespace => 'sidekiq_manager_test')
+REDIS = ConnectionPool.new(:size => 1, :timeout => 5) { MockRedis.new }
